@@ -19,13 +19,14 @@ class BlogsController < ApplicationController
 
   # GET /blogs/1/edit
   def edit
+    ensure_correct_user
   end
 
   # POST /blogs
   # POST /blogs.json
   def create
     @blog = Blog.new(blog_params)
-
+    @blog.user_id = current_user.id
     respond_to do |format|
       if @blog.save
         format.html { redirect_to @blog, notice: 'Blog was successfully created.' }
@@ -54,6 +55,7 @@ class BlogsController < ApplicationController
   # DELETE /blogs/1
   # DELETE /blogs/1.json
   def destroy
+    ensure_correct_user
     @blog.destroy
     respond_to do |format|
       format.html { redirect_to blogs_url, notice: 'Blog was successfully destroyed.' }
@@ -71,4 +73,13 @@ class BlogsController < ApplicationController
     def blog_params
       params.require(:blog).permit(:title, :content)
     end
+
+    def ensure_correct_user
+      @blog = Blog.find_by(id:params[:id])
+      if @blog.user_id != current_user.id
+        flash[:notice] = "権限がありません"
+        redirect_to("/blogs/")
+      end
+    end
+
 end
